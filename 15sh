@@ -1,6 +1,6 @@
+#!/bin/bash
 #!/usr/bin/env bash
 #!/usr/bin/env sh
-#!/bin/bash
 #!/bin/sh
 
 ## hyphop ##
@@ -816,52 +816,15 @@ TRANS(){
     esac
 }
 
-SP="
-........
-.@..@@@.
-.@..@...
-.@..@@@.
-.@....@.
-.@..@@@.
-........
-"
 n=$'\n'
-
-S6="0 1 2 3 4 5 6"
-f_=1
-b_=7
-SPLASH15() {
-S_=${SP//$n/}
-[ "$3" ] && { f_=7; b_=1; }
-S_=${S_//./$f_}
-S_=${S_//@/$b_}
-xc_=$((1+($1-64)/2))
-cc_=$((0+($2-28)/2))
-i=0
-F_="$FF"
-for c in $S6 ; do
-for x in $S6 7; do
-    M_=${S_:$((c*8+x)):1}
-    BOARD_THUMB $((x*8+xc_)) $((c*4+cc_)) $F_ \
-    2 $((i%7+0))  $(((i+1)%7)) $(((i+1)%$M_)) $(((i) % $M_))
-    i=$((i+1))
-#    sleep 0.03
-#   TRANS $i
-done
-done
-printf "\033[$(((c+1)*4+cc_+1));$((xc_))H$N%s" "15sh - 15 puzzle - https://github.com/hyphop/15sh - ## hyphop ##"
-}
-
-
-##
 
 
 for a in $@; do
     case $a in
 	--splash)
-	T_SIZE
-	clear
-	SPLASH15 $SW $SH $2
+#	T_SIZE
+#	clear
+#	SPLASH15 $SW $SH $2
 	echo
 	exit 0
 	;;
@@ -879,14 +842,14 @@ for a in $@; do
 done
 
 
-[ "1" ] && {
+#[ "1" ] && {
 T_CLEAR
-SPLASH15 $SW $SH 
-sleep 1
-SPLASH15 $SW $SH 1
-sleep 2
-T_GOTO $SH 0
-}
+#SPLASH15 $SW $SH 
+#sleep 1
+#SPLASH15 $SW $SH 1
+#sleep 2
+#T_GOTO $SH 0
+#}
 
 NEW $POS
 
