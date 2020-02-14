@@ -1,0 +1,1009 @@
+#!/usr/bin/env bash
+#!/usr/bin/env sh
+#!/bin/bash
+#!/bin/sh
+
+## hyphop ##
+
+#= 15sh - 15-puzzle - shell implementation
+
+HYPHOP="
+## hyphop ##
+"
+SPLASH='
+  _ ____    
+ / | ___|  G
+ | |___ \  a
+ | |___) | m
+ |_|____/  e
+ 15-puzzle  
+'
+ABOUT="
+15-puzzle - shell implementation
+
+USAGE EXAMPLES
+    
+    15 b09c531f4862a7ed
+"
+
+USAGE(){ echo "
+USAGE 
+
+    15 [POSITION]
+
+"
+exit 1
+}
+
+HELP="
+LEFT     < a
+RIGHT    > d
+UP       ^ w
+DOWN     v s
+EXIT   Esc q
+NEW    Tab 6
+AGAIN      5
+UPDATE Enter
+REFRESH    r
+ROTATE     e
+"
+
+d0="
+          
+          
+          
+          
+          
+"
+
+d1="
+     @    
+    @@    
+     @    
+     @    
+     @    
+"
+d2="
+    @@    
+   @  @   
+     @    
+    @     
+   @@@@   
+"
+d3="
+    @@    
+      @   
+     @    
+      @   
+    @@    
+"
+d3="
+    @@    
+      @   
+     @    
+      @   
+    @@    
+"
+d4="
+   @  @   
+   @  @   
+    @@@   
+      @   
+      @   
+"
+d5="
+   @@@@   
+   @      
+   @@@    
+      @   
+   @@@    
+"
+d6="
+    @@    
+   @      
+   @@@    
+   @  @   
+    @@    
+"
+d7="
+   @@@@   
+      @   
+     @    
+    @     
+    @     
+"
+d8="
+    @@    
+   @  @   
+    @@    
+   @  @   
+    @@    
+"
+d9="
+    @@    
+   @  @   
+    @@@   
+      @   
+    @@    
+"
+da="
+  @   @@  
+  @  @  @ 
+  @  @  @ 
+  @  @  @ 
+  @   @@  
+"
+db="
+   @   @  
+  @@  @@  
+   @   @  
+   @   @  
+   @   @  
+"
+dc="
+  @   @@  
+  @  @  @ 
+  @    @  
+  @   @   
+  @  @@@@ 
+"
+dd="
+  @   @@  
+  @  @  @ 
+  @    @  
+  @  @  @ 
+  @   @@  
+"
+de="
+  @  @  @ 
+  @  @  @ 
+  @   @@@ 
+  @     @ 
+  @     @ 
+"
+df="
+  @  @@@@ 
+  @  @    
+  @  @@@  
+  @     @ 
+  @  @@@  
+"
+
+
+
+#timeout 1s sleep 123
+#
+#exit 0
+
+trap 'QUIT' QUIT
+trap 'QUIT' INT
+trap 'sigusr1' USR1
+trap ':'       HUP      # ignore the specified signals
+
+STARTED=
+
+SEQ0=" 0 1 2 3 4 5 6 7 8  9 10 11 12 13 14 15"
+ SEQ=" 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16"
+SEQF=" 0 1 2 3 4 5 6 7 8 9 a b c d e f"
+
+####"2 1 4 3 6 4 ...........................
+
+FF="123456789abcdef0"
+M="O+#%XHo"
+U="@"
+u=0
+
+#i=0
+#while [ "$i" -lt 255 ] ; do 
+#printf "\x$(printf %x $i)\n"
+#i=$((i+1))
+#done
+#exit 
+
+CUSTOME(){
+    c=${M:$u:1}
+    for i in $SEQF; do
+	eval "a=\$d$i"
+	a=${a//$U/$c}
+	eval "d$i=\$a"
+    done
+    U=$c
+    u=$(((u+1)% ${#M} ))
+}
+
+CUSTOME
+
+SHUF(){
+for i in $(shuf -i0-15); do
+    printf "%x" $i
+done
+}
+
+SHUF2(){
+    printf %x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x $(shuf -i0-15)
+}
+
+
+B5='\e[0;36;40m' # blank
+BA='\e[0;37;44m' # block
+BA='\e[0;37;44m' # block
+B7='\e[0;37;47m' 
+B4='\e[0;30;40m' # BOARD
+BB='\e[0;30;44m' # block OK
+BB='\e[0;37;44m' # block OK
+BC='\e[0;30;45m'
+BD='\e[0;31;40m'
+
+# COLOR
+CB='\033[0;30m'    # black
+CW='\033[0;37m'    # black
+CR='\033[0;31m'    # Red
+
+ESC=$'\e'
+TAB=$'\t'
+ENTER=$'\n'
+
+N='\033[0m'
+
+#- Clear the screen, move to (0,0):
+CLEAR='\033[2J'
+ERASE='\033[K'
+
+# .... .... .... ....
+
+n="05s "
+
+T_DEF(){
+    printf "$N"
+}
+
+T_CLEAR(){
+    printf "$CLEAR"
+}
+
+T_GOTO(){
+    printf "\033[$1;${2}H"
+}
+
+## SCREEN SIZE
+## 1920x1080 fullhd
+## 33x120
+
+#
+#33  / 4 = 8
+#8*2 => 16
+#120 / 4 = 30
+#
+
+## 32 * 64
+
+
+SW=120
+SH=34
+SW=
+SH=
+
+T_SIZE(){
+
+#    `stty rows 32 cols 200`
+
+    TTY=$(stty size 2>/dev/null)
+    
+#    [ "$TTY" ] || {
+#	SW=120
+#	SH=32
+#    }
+
+    [ "$TTY" ] && {
+    SH=${TTY% *}
+    SW=${TTY#* }
+    }
+
+#    echo "SIZE: $SH $SW"
+
+#    exit 0
+
+#    SH=${TTY#*rows}
+#    SH=$(echo ${SH%%;*})
+#    SW=${TTY#*columns}
+#    SW=$(echo ${SW%%;*})
+}
+
+FILL(){
+    #$1 1
+    s="$1"
+    [ "$s" ] || s=1
+    ss="$(printf "%${s}s" " ")"
+    [ "$2" ] && ss=${ss// /$2}
+    ss=${ss:0:$s}
+    echo "$ss"
+}
+
+############################
+
+MC='\e[0;36;47m'
+
+## 11 
+
+T_CHANGED(){
+T_SIZE
+LL=10
+SX=16
+ZZ=$((SX*4))
+XX=$(((SW-$ZZ)/2+2))
+YY=2
+Sw=$((SX-2))
+SY=8
+L5="1 2 3 4 5"
+}
+
+T_CHANGED
+
+SPRITE(){
+    eval "C=\"\$$1\""
+    Cq=${C#$ENTER}
+    Cq=${Cq%%$ENTER*}
+    Cw=${#Cq}
+    Ch=$((${#C}/$Cw))
+    CH=$Ch
+
+    X_=$2
+    Y_=$3
+    c_=1
+
+    Ff="\e[0;$((30+$4));$((40+$5))m"
+
+#    echo "X: $X_ Y: $Y_ w: $Cw h: $Ch o:$c_:::"
+#    exit 0
+
+    while [ "$CH" -gt 0 ] ; do
+	printf "\033[$Y_;${X_}H$Ff%s$N" "${C:$c_:$Cw}"
+	c_=$((c_+1+$Cw))
+	Y_=$((Y_+1))
+	CH=$((CH-1))
+    done
+
+#    printf "\033[$Y;${X}H$o%${Sw}s$N" " "
+
+}
+
+
+BAR(){
+    X=$((SX*$1 + $XX ))
+    Y=$((SY*$2 + $YY ))
+    n="$3"
+    c=1
+#   echo "$n $1 $2 => $X $Y"
+ #  return
+
+    V="${FF:$((y*4+$x)):1}"
+
+    o=$BA
+    [ "$V" = "$n" ] && o=$BB
+    [ "$n" = "0"  ] && o=$B5
+
+    eval "C=\"\$d$n\""
+
+    printf "\033[$Y;${X}H$o%${Sw}s$N" " "
+    Y=$((Y+1))
+
+    for l in $L5; do
+	z="${C:$c:$LL}"
+#	z=${z//$U/$B7 $o}
+#	printf "\033[$Y;${X}H$o  $z  $N"
+	printf "\033[$Y;${X}H$o%s$N" "  $z  "
+	c=$((c+$LL+1))
+	Y=$((Y+1))
+    done
+
+    printf "\033[$Y;${X}H$o%${Sw}s$N" "."
+
+}
+
+#########
+
+LOOP=1
+
+#T_GOTO 1 2
+#echo "start '${SH}x${SW}'"
+
+PLACE() {
+T_CLEAR
+T_DEF
+
+
+Y=$((0))
+X=$(((SW-$ZZ)/2+0))
+
+Zz=$((ZZ+2))
+Zl=$((X+$Zz+2))
+
+#BOARD_THUMB $((Zl)) 2 $FF
+SPRITE HYPHOP $Zl 2 6 0
+SPRITE SPLASH $((Zl+0)) 3 1 0
+SPRITE HELP   $Zl 10 2 0
+
+CCC=$B4
+
+while [ ! "$Y" = "$SH" ] ; do
+    printf "\033[$Y;${X}H$CCC%${Zz}s$N" " "
+    Y=$((Y+1))
+done
+
+
+}
+
+zx=
+zy=
+zz=
+MOVES=0
+
+L4="0 1 2 3"
+
+BOARD_THUMB() {
+
+x_=$1 # X
+y_=$2 # Y
+f_=$3 # BOARD
+s_=$4 # SCALE
+
+[ "$s_" ] || s_=4
+[ "$f_" ] || f_="$F_"
+c1=$5	# COLOR 1
+[ "$c1" ] || c1="2"
+c2=$6	# COLOT 2
+[ "$c2" ] || c2="$c1"
+b1=$7	# BG COLOR 1
+[ "$b1" ] || b1="0"
+b2=$8	# BG COLOT 2
+[ "$b2" ] || b2="$b1"
+
+c_=$c1
+b_=$b1
+
+#echo "[i] > $x_ $y_ $f_ $s_ $c1 $c2 $b1 $b2">&2
+#return
+
+    for y in $L4 ; do
+	printf "\033[$y_;${x_}H"
+	for x in $L4; do
+	    v="${f_:$((y*4+$x)):1}"
+	    vv="0x$v"
+	    vvv="$((vv))"
+	    case $(((x+y)%2)) in
+		0) c_=$c1
+		b_=$b1;;
+		1) c_=$c2
+		b_=$b2;;
+	    esac
+	    [ "$v" = "0" ] && vvv=" ."
+	    printf "\e[0;3${c_};4${b_}m%${s_}s" "$vvv"
+	done
+	printf "$N"
+	y_=$((y_+1))
+	c_=$c1
+	[ "$s_" = "4" ] && {
+        printf "\033[$y_;${x_}H\e[0;3${c_};4${b_}m%16s$N" " "
+	y_=$((y_+1))
+	}
+    done
+}
+
+STATE=""
+
+game_time_pid=
+
+PID=$$
+
+TIKTAK=
+
+game_time(){
+
+    [ "$TIKTAK" ] || return
+    NOW=$(date +%s)
+    time=$((NOW-STARTED))
+#    echo "[i] tiktak $time"
+    b=$N
+    printf "\033[13;${w_}H$b%-08s$BD%08s$N" "time" "$time"
+    T_GOTO $SH 0
+}
+
+sigusr1(){
+    game_time
+}
+
+#Y=$((0))
+w_=$(((SW-$ZZ)/2-18))
+
+game_stats(){
+
+    NOW=$(date +%s)
+    STATE="2 PLAY"
+
+    [ "$F_" = "$FB" ] && STATE="4 BEGIN"
+    [ "$F_" = "$FF" ] && STATE="1 SOLVED"
+
+    [ "$MOVES" = "1" ] && TIKTAK=1
+
+#    b='\e[0;36;40m' # block
+    b=$N
+
+    printf "\033[10;${w_}H$b%-08s$N" "$FB"
+        
+    printf "\033[12;${w_}H$b%-08s\e[0;30;4%sm%08s$N" state $STATE
+    game_time
+    printf "\033[14;${w_}H$b%-08s$BD%08s$N" "moves" "$MOVES"
+    printf "\033[15;${w_}H$b%-08s$BD%08s$N" "DtCLC" "$HARD"
+    printf "\033[16;${w_}H$b%-08s$BD%08s$N" "OnPLC" "$GOOD"
+    printf "\033[17;${w_}H$b%-08s\e[0;30;4%sm%08s$N" "crc odd" $((UNRESOLVE+4)) "$UNRE"
+    printf "\033[18;${w_}H$b%-16s$N" "$SOLVED_TXT"
+    printf "\033[20;${w_}H$N%-08s$N" "$F_"
+
+    T_GOTO $SH 0
+}
+
+
+BOARD() {
+    for y in $L4; do
+	for x in $L4; do
+	    z=$((y*4+$x))
+	    v="${F_:$z:1}"
+	    [ "$v" = "0" ] && {
+		zx=$x
+		zy=$y
+		zz=$z
+	    }
+	    BAR $x $y $v
+	done
+    done
+#    game_time
+    game_stats
+
+}
+
+
+#0123 37bf
+#4567 26ae
+#89ab 159d
+#cdef 048c
+
+# left rotation 
+ROTL(){
+F_="\
+${F_:3:1}${F_:7:1}${F_:11:1}${F_:15:1}\
+${F_:2:1}${F_:6:1}${F_:10:1}${F_:14:1}\
+${F_:1:1}${F_:5:1}${F_: 9:1}${F_:13:1}\
+${F_:0:1}${F_:4:1}${F_: 8:1}${F_:12:1}\
+"
+}
+
+#0123 c840
+#4567 d951
+#89ab ea62
+#cdef fb73
+
+# right rotation
+ROTR(){
+F_="\
+${F_:12:1}${F_: 8:1}${F_:4:1}${F_:0:1}\
+${F_:13:1}${F_: 9:1}${F_:5:1}${F_:1:1}\
+${F_:14:1}${F_:10:1}${F_:6:1}${F_:2:1}\
+${F_:15:1}${F_:11:1}${F_:7:1}${F_:3:1}\
+"
+}
+
+# vertical flip
+FLIPV(){
+F_="\
+${F_:12:1}${F_:13:1}${F_:14:1}${F_:15:1}\
+${F_: 8:1}${F_: 9:1}${F_:10:1}${F_:11:1}\
+${F_: 4:1}${F_: 5:1}${F_: 6:1}${F_: 7:1}\
+${F_: 0:1}${F_: 1:1}${F_: 2:1}${F_: 3:1}\
+"
+}
+
+# horizontal flip
+FLIPH(){
+F_="\
+${F_: 3:1}${F_: 2:1}${F_: 1:1}${F_: 0:1}\
+${F_: 7:1}${F_: 6:1}${F_: 5:1}${F_: 4:1}\
+${F_:11:1}${F_:10:1}${F_: 9:1}${F_: 8:1}\
+${F_:15:1}${F_:14:1}${F_:13:1}${F_:12:1}\
+"
+}
+
+BOARD2(){
+BOARD
+}
+#exit 0
+
+LEFT(){
+[ "$zx" = 3 ] && return
+MOVES=$((MOVES+1))
+F_="${F_:0:$zz}${F_:$((zz+1)):1}0${F_:$((zz+2))}"
+BOARD2
+}
+
+RIGHT(){
+[ "$zx" = 0 ] && return
+MOVES=$((MOVES+1))
+F_="${F_:0:$((zz-1))}0${F_:$((zz-1)):1}${F_:$((zz+1))}"
+BOARD2
+}
+
+##0#
+##1#
+##2#
+##3#
+
+#.1...0.........
+##0###1###2###3#
+
+UP(){
+[ "$zy" = 3 ] && return
+MOVES=$((MOVES+1))
+F_="${F_:0:$zz}${F_:$((zz+4)):1}${F_:$((zz+1)):3}0${F_:$((zz+5))}"
+BOARD2
+}
+
+##0#
+##1#
+##2#
+##x#
+
+#.0...1...2...x.
+#.0...1...x...2.
+
+DOWN(){
+[ "$zy" = 0 ] && return
+MOVES=$((MOVES+1))
+F_="${F_:0:$((zz-4))}0${F_:$((zz-3)):3}${F_:$((zz-4)):1}${F_:$((zz+1))}"
+BOARD2
+}
+
+
+
+GOOD=
+
+CHECKUP(){
+    s=0
+    GOOD=0
+
+    UNRE=0
+    UNRESOLVE=0
+    ZROW=0
+
+#    echo "$F_"
+
+    for n in $SEQ; do
+	n3=$((0x${F_:$((n-1)):1}))
+
+	[ "$n3" = "0" ] && {
+	    ZROW=$(((n-1)/4+1))
+	    UNRE=$((UNRE+ZROW))
+	}
+
+	[ "$n3" = "0" ] && continue
+
+	[ "$n" -gt "$n3" ] && s=$((s+$n-$n3))
+	[ "$n" -gt "$n3" ] || s=$((s+$n3-$n))
+	[ "$n" = "$n3" ]   && GOOD=$((GOOD+1))
+
+#	echo "POS: $n -$n3-"
+
+	UU=0
+	while [ "$n" -lt 16 ] ; do
+	    n4=$((0x${F_:$n:1}))
+	    [ "$n4" = "0" ] || {
+	    [ "$n4" -lt "$n3" ] && {
+	    UNRE=$((UNRE+1))
+	    UU=$((UU+1))
+#	    echo "+$n4 $n3 $UU"
+	    }
+	    }
+	    n=$((n+1))
+	done
+
+
+    done
+
+    SOLVED_TXT="................"
+
+    [ "$((UNRE%2))" = "0" ] || { 
+    UNRESOLVE=1
+    SOLVED_TXT="unresolvable !!!"
+    }
+
+
+    HARD=$s
+
+#   echo "$HARD $GOOD $UNRE"
+
+#
+}
+
+REFRESH(){
+PLACE
+BOARD_THUMB $((w_-1)) 2 "" 4 2 6
+BOARD
+}
+
+#new(){
+#    F_="$(SHUF)"
+#    CHECKUP
+#    [ "$UNRESOLVE" = "1" ] && ROTL
+#}
+
+NEW(){
+
+F_=$1
+AGAIN=1
+
+while [ "$AGAIN" ] ; do
+    [ "$F_" ] || F_="$(SHUF)"
+    [ "$F_" = "$FF" ] || AGAIN=
+    CHECKUP
+    [ "$UNRESOLVE" = "1" ] && {
+	ROTL
+        CHECKUP
+    }
+done
+
+FB="$F_"
+MOVES=0
+STARTED=$(date +%s)
+TIKTAK=
+REFRESH
+
+}
+
+#################
+
+QUIT(){
+#    T_CLEAR
+#    echo "[i] STOP $game_time_pid">&2
+#    [ "$game_time_pid" ] && kill $game_time_pid
+    echo 
+    echo $F_
+    exit 0
+}
+
+POS=
+POSC=
+ERR=
+ChkPos(){
+    P=$1
+    s=${#p}
+    C=$FF
+    l=${#P}
+    ERR=
+#   echo "[i] check $P - $l">&2
+    [ "$l" = "15" -o "$l" = 16 ] || {
+	ERR="wrong length != 15-16"
+	return 1
+    }
+    for i in $SEQ0; do
+	p="${P:$i:1}"
+	[ "$p" ] || {
+	    [ "$i" = 15 ] && {
+		POSC="$P$C"
+		echo "[i] $POSC - OK">&2
+		return 0
+	    }
+	    ERR="hmm"
+	    return 2
+	}
+	c=${C/$p/}
+	echo "$i $p $c"
+	[ "$c" = "$C" ] && {
+	    ERR="not from [0-9a-f] or dubs chars"
+	    return 3
+	}
+	C="$c"
+    done
+    return 0
+}
+
+
+########### X Y POS S c1 c2 b1 b2
+
+TRANS(){
+    case $(($1%3)) in
+	0) ROTL;;
+	1) FLIPV;;
+	2) FLIPH;;
+	3) ROTR;;
+    esac
+}
+
+SP="
+........
+.@..@@@.
+.@..@...
+.@..@@@.
+.@....@.
+.@..@@@.
+........
+"
+n=$'\n'
+
+S6="0 1 2 3 4 5 6"
+f_=1
+b_=7
+SPLASH15() {
+S_=${SP//$n/}
+[ "$3" ] && { f_=7; b_=1; }
+S_=${S_//./$f_}
+S_=${S_//@/$b_}
+xc_=$((1+($1-64)/2))
+cc_=$((0+($2-28)/2))
+i=0
+F_="$FF"
+for c in $S6 ; do
+for x in $S6 7; do
+    M_=${S_:$((c*8+x)):1}
+    BOARD_THUMB $((x*8+xc_)) $((c*4+cc_)) $F_ \
+    2 $((i%7+0))  $(((i+1)%7)) $(((i+1)%$M_)) $(((i) % $M_))
+    i=$((i+1))
+#    sleep 0.03
+#   TRANS $i
+done
+done
+printf "\033[$(((c+1)*4+cc_+1));$((xc_))H$N%s" "15sh - 15 puzzle - https://github.com/hyphop/15sh - ## hyphop ##"
+}
+
+
+##
+
+
+for a in $@; do
+    case $a in
+	--splash)
+	T_SIZE
+	clear
+	SPLASH15 $SW $SH $2
+	echo
+	exit 0
+	;;
+	-p*)
+	ChkPos ${a#*=}
+	;;
+	*)
+	ChkPos $a || {
+	echo "[e] worng pos value $a - $ERR">&2
+	USAGE
+	}
+	POS=$POSC
+	;;
+    esac
+done
+
+
+[ "1" ] && {
+T_CLEAR
+SPLASH15 $SW $SH 
+sleep 1
+SPLASH15 $SW $SH 1
+sleep 2
+T_GOTO $SH 0
+}
+
+NEW $POS
+
+ESC2=
+
+#echo $PID
+#sleep 1
+
+
+# time update
+(
+while [ "1" ] ; do
+    sleep 1
+    [ -d /proc/$PID ] || exit
+    kill -USR1 "$PID"
+done
+) &
+
+while [ "LOOP" ] ; do
+
+#    read -sn 1
+    read -sn 1
+
+#    echo "[i] >>$REPLY<<">&2
+
+    case "$REPLY" in
+	1|q|Q)
+	QUIT
+	;;
+	0)
+	NEW $FB
+	;;
+	e)
+	ROTL
+	CHECKUP
+	BOARD
+	;;
+	f)
+	ROTR
+	CHECKUP
+	BOARD
+	;;
+	v)
+	FLIPV
+	CHECKUP
+	BOARD
+	;;
+	h)
+	FLIPH
+	CHECKUP
+	BOARD
+	;;
+	r)
+	REFRESH
+	;;
+	c|"")
+	CHECKUP
+	game_stats
+	;;
+	2)
+	CUSTOME
+	BOARD
+	;;
+#	NEW "123456789abcfde0"
+#	;;
+#	3)
+#	NEW "0edfcba987654321"
+#	;;
+#	4)
+#	NEW "123456789abcdfe0"
+#	;;
+	5)
+	#VOL DOWN
+	NEW $FB
+	;;	
+	6)
+	#VOL UP
+	NEW
+    	;;	
+
+	z)
+	[ "$game_time_pid" ] && kill $game_time_pid
+	;;
+	*C|d)
+	RIGHT
+	;;
+	*D|a)
+	LEFT
+	;;
+	*A|w)
+	UP
+	;;
+	*B|s)
+	DOWN
+	;;
+	$TAB)
+#	echo "[i] =>>$REPLY<<">&2
+	NEW
+	;;
+
+	$ESC)
+	[ "$ESC2" ] || {
+	    ESC2=1
+	    continue
+	}
+	#echo "[i] >>$REPLY<<">&2
+	QUIT
+#	exit 0
+	;;
+	*)
+	ESC2=
+#	echo "$REPLY" | hexdump -C
+	continue
+	;;
+    esac
+
+    REPLY=
+done
+
+
