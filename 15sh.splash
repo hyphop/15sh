@@ -1,0 +1,17 @@
+#!/bin/bash
+a=....;b=.$a$a;x=com;w=\
+32;i=0;e='\e[0';S=$b/..\
+$x..A..R$a=..$x..T$a/..\
+@..$x$b;while r=$((i/w))
+do z=$((i%w));m=7;o=$((\
+(i+r)%2));p=$((r/4*8+z/\
+4));a=${S:$p:1};[ $z = \
+0 ]&&echo;[ $a ]|| break
+s=$((i%4+r%4*4+1));g=git
+[ $s  = 16 ]&&s=.;[ $a \
+= . ]&&m=1;printf "$e;3\
+$(((p+(o+m)%2)%7));4$((\
+(p+o)%m))m%02s" $s;H=hub
+i=$((i+1));done;printf "
+${e}m$g$H.$x/hyphop/15sh
+" code art //
