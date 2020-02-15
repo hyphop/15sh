@@ -1,0 +1,31 @@
+#!/bin/sh
+
+## hyphop ##
+
+#= online launcher
+
+GAME=15sh
+SRC=https://raw.githubusercontent.com/hyphop/$GAME/master/$GAME
+DST=/tmp/$GAME
+
+SHELL=$(which bash)
+[ "$SHELL" ] || SHELL=$(which sh)
+
+GET=$(which curl)
+[ "$GET" ] || GET=$(which wget)
+OPT=
+
+case $GET in
+    *wget)
+    OPT="-O-"
+    ;;
+    *curl)
+    OPT="-jkfL"
+    ;;
+esac
+
+echo "[i] ONLINE LAUNCHER => $GAME">&2
+echo "[i] SHELL: $SHELL + GET: $GET $OPT SRC: $SRC=>$DST">&2
+
+$GET $OPT $SRC > $GAME && exec $SHELL $DST $@
+
