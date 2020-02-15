@@ -24,8 +24,37 @@ case $GET in
     ;;
 esac
 
-echo "[i] ONLINE LAUNCHER => $GAME">&2
-echo "[i] SHELL: $SHELL + GET: $GET $OPT SRC: $SRC=>$DST">&2
+i=0
+PID=$$
+PPID=$$
+IN=
+AGAIN=1
+while [ "$AGAIN" ] ; do
+for PPID in $(cat /proc/$PPID/stat); do
+#    echo $PPID
+    [ $i = 3 ] && {
+    i=0
+    IN=$(readlink /proc/$PPID/fd/0)
+    case $IN in
+	pipe*)
+	break
+	;;
+	pts*)
+	;;
+	*)
+	;;
+    esac
+    AGAIN=
+    break
+    }
+    i=$((i+1))
+done
+done
 
-$GET $OPT $SRC > $GAME && exec $SHELL $DST $@
+#ls -l1 /proc/self/fd/0
+
+echo "[i] ONLINE LAUNCHER => $GAME">&2
+echo "[i] IN: $IN PID: $PID PPID: $PPID | SHELL: $SHELL + GET: $GET $OPT SRC: $SRC=>$DST">&2
+
+$GET $OPT $SRC > $GAME && exec $SHELL $DST $@ <$IN
 
